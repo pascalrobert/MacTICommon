@@ -1,5 +1,7 @@
 package ca.macti.frameworks.common.atlassian;
 
+import java.util.List;
+
 import com.atlassian.crowd.embedded.api.PasswordCredential;
 import com.atlassian.crowd.embedded.api.User;
 import com.atlassian.crowd.exception.ApplicationPermissionException;
@@ -15,6 +17,8 @@ import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.crowd.integration.rest.entity.PasswordEntity;
 import com.atlassian.crowd.integration.rest.entity.UserEntity;
 import com.atlassian.crowd.integration.rest.service.factory.RestCrowdClientFactory;
+import com.atlassian.crowd.model.group.Group;
+import com.atlassian.crowd.search.query.entity.restriction.NullRestrictionImpl;
 import com.atlassian.crowd.search.query.entity.restriction.TermRestriction;
 import com.atlassian.crowd.search.query.entity.restriction.constants.UserTermKeys;
 import com.webobjects.foundation.NSArray;
@@ -186,6 +190,47 @@ public class CrowdClient {
     catch (InvalidCredentialException e) {
       throw new AccountException(e.getMessage(), e);
     } 
+  }
+  
+  public NSArray<User> listAllUsers() throws AccountException, ApplicationException {
+    try {
+      List<com.atlassian.crowd.model.user.User> users = crowdClient.searchUsers(NullRestrictionImpl.INSTANCE, 0, 2000);
+      if ((users != null) && (users.size() > 0)) {
+        return new NSArray<User>(users);
+      }
+    }
+    catch (ApplicationPermissionException e) {
+      throw new ApplicationException(e.getMessage(), e);
+    }
+    catch (InvalidAuthenticationException e) {
+      throw new ApplicationException(e.getMessage(), e);
+    }
+    catch (OperationFailedException e) {
+      throw new ApplicationException(e.getMessage(), e);
+    }
+    return new NSArray<User>();
+  }
+  
+  public NSArray<Group> groupsForUser(String userName) throws AccountException, ApplicationException {
+    try {
+      List<com.atlassian.crowd.model.group.Group> groups = crowdClient.getGroupsForUser(userName, 0, -1);
+      if ((groups != null) && (groups.size() > 0)) {
+        return new NSArray<Group>(groups);
+      }
+    }
+    catch (ApplicationPermissionException e) {
+      throw new ApplicationException(e.getMessage(), e);
+    }
+    catch (InvalidAuthenticationException e) {
+      throw new ApplicationException(e.getMessage(), e);
+    }
+    catch (OperationFailedException e) {
+      throw new ApplicationException(e.getMessage(), e);
+    }
+    catch (UserNotFoundException e) {
+      throw new AccountException(e.getMessage(), e);
+    }
+    return new NSArray<Group>();
   }
   
   public class AccountException extends Exception {
